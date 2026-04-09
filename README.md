@@ -47,16 +47,6 @@ Economia anual: $2,949.12/ano
 
 ## Pré-requisitos
 
-### Engines Suportadas
-
-Blue/Green Deployment está disponível para:
-
-- **MySQL**: 5.7.44+, 8.0.36+
-- **MariaDB**: 10.5.23+, 10.6.16+, 10.11.7+, 11.4.2+
-- **PostgreSQL**: 11.21+, 12.16+, 13.12+, 14.9+, 15.4+, 16.1+
-- **Aurora MySQL**: 5.7, 8.0 (todas as versões compatíveis)
-- **Aurora PostgreSQL**: 11.21+, 12.16+, 13.12+, 14.9+, 15.4+
-
 ### Configurações Obrigatórias
 
 #### 1. Backups Automáticos
@@ -123,7 +113,7 @@ binlog_format = ROW (MySQL/MariaDB)
 
 ### Atenção Especial: Instâncias Burstable (Família T)
 
-**IMPORTANTE**: Se sua instância RDS utiliza a família T (db.t3.micro, db.t3.small, db.t3.medium, etc.), considere migrar temporariamente para uma instância de outra família (M, R ou C) antes de iniciar o Blue/Green Deployment.
+**IMPORTANTE**: Se sua instância RDS utiliza a família T, considere migrar temporariamente para uma instância de outra família (M, R ou C) antes de iniciar o Blue/Green Deployment.
 
 **Por que isso é necessário?**
 
