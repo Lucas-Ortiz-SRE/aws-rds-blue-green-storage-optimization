@@ -126,24 +126,9 @@ Instâncias da família T utilizam um modelo de créditos de CPU. Durante o Blue
 
 **Recomendação:**
 
-1. **Antes do Blue/Green**: Modifique a instância para db.m5.large, db.r6g.large ou db.c6g.large (ou equivalente)
+1. **Antes do Blue/Green**: Modifique a instância para m6g+, r6g+ ou c6g+ (ou equivalente)
 2. **Execute o Blue/Green Deployment**: Com a instância M/R/C, o processo será mais rápido e estável
 3. **Após validação**: Volte para a instância T se necessário (após deletar o ambiente Blue)
-
-**Exemplo de modificação temporária:**
-```bash
-# Modificar de T para M antes do Blue/Green
-aws rds modify-db-instance \
-  --db-instance-identifier prod-database \
-  --db-instance-class db.m5.large \
-  --apply-immediately
-
-# Aguardar modificação completar
-aws rds wait db-instance-available \
-  --db-instance-identifier prod-database
-
-# Agora pode criar o Blue/Green Deployment
-```
 
 **Custo adicional**: A diferença de custo entre T e M/R/C por algumas horas é mínima comparada ao risco de problemas durante o deployment.
 
