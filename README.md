@@ -136,19 +136,19 @@ Instâncias da família T utilizam um modelo de créditos de CPU. Durante o Blue
 
 ## Etapa 1: Avaliação de Recursos e Planejamento
 
-### 1.1 Verificar Uso Real de Storage
+### 1.1 Criar Snapshot de Segurança
 
-```sql
--- PostgreSQL
-SELECT 
-  pg_size_pretty(pg_database_size(current_database())) as database_size;
+**Recomendação**: Antes de iniciar qualquer operação, crie um snapshot manual do RDS atual para fins de rollback em caso de necessidade.
 
--- MySQL/MariaDB
-SELECT 
-  table_schema AS 'Database',
-  ROUND(SUM(data_length + index_length) / 1024 / 1024 / 1024, 2) AS 'Size (GB)'
-FROM information_schema.tables
-GROUP BY table_schema;
+```bash
+# Criar snapshot manual
+aws rds create-db-snapshot \
+  --db-instance-identifier <NOME_DA_INSTANCIA_RDS> \
+  --db-snapshot-identifier backup-before-bluegreen-$(date +%Y%m%d-%H%M%S)
+
+# Aguardar snapshot completar
+aws rds wait db-snapshot-completed \
+  --db-snapshot-identifier backup-before-bluegreen-$(date +%Y%m%d-%H%M%S)
 ```
 
 ### 1.2 Verificar Métricas no CloudWatch
@@ -172,11 +172,26 @@ aws cloudwatch get-metric-statistics \
 Storage Mínimo = (Espaço Usado × 1.2) + Buffer de Crescimento
 ```
 
+**Explicação do cálculo:**
+
+1. **Espaço Usado**: Valor obtido das métricas do CloudWatch (Storage alocado - FreeStorageSpace)
+2. **Margem de 20% (1.2)**: Adiciona segurança para:
+   - Fragmentação do sistema de arquivos
+   - Arquivos temporários durante operações
+   - Logs de transações (WAL, binlog)
+   - Overhead do sistema operacional
+3. **Buffer de Crescimento**: Espaço adicional para crescimento futuro (recomendado: 100-200 GB)
+
 **Exemplo (cenário 4TB → 1TB):**
-- Espaço usado: 850 GB
-- Margem de segurança: 20% (170 GB)
+- Storage alocado atual: 4096 GB (4TB)
+- FreeStorageSpace (CloudWatch): 3246 GB
+- **Espaço usado**: 4096 - 3246 = 850 GB
+- Margem de segurança (20%): 850 × 0.2 = 170 GB
 - Buffer de crescimento: 100 GB
-- **Storage recomendado: 1120 GB → Provisionar 1200 GB**
+- **Cálculo final**: 850 + 170 + 100 = 1120 GB
+- **Storage recomendado**: 1200 GB (arredondado para cima)
+
+**IMPORTANTE**: Nunca provisione storage muito próximo ao limite usado. Sempre mantenha pelo menos 15-20% de espaço livre.
 
 ### 1.4 Verificar Tipo de Volume e IOPS
 
