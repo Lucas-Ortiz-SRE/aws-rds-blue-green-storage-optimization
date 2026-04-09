@@ -9,7 +9,7 @@ Estrutura de otimização de custos para AWS RDS: Redução de storage utilizand
 Este projeto documenta a estratégia de redução de storage em bancos de dados Amazon RDS utilizando a funcionalidade Blue/Green Deployment. O objetivo é reduzir custos operacionais eliminando storage provisionado em excesso (por exemplo, reduzir de 4TB para 1TB) com downtime mínimo e zero perda de dados.
 
 **Por que isso é necessário?** O Amazon RDS não permite redução direta de storage após o provisionamento. A única forma de reduzir o tamanho é através de:
-- Snapshot + Restore (com downtime prolongado)
+- Dump + Restore (com downtime prolongado)
 - Blue/Green Deployment (downtime de segundos a minutos)
 
 ---
