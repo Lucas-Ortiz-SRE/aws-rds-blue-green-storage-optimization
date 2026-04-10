@@ -194,7 +194,7 @@ Storage Mínimo = (Espaço Usado × 1.2) + Buffer de Crescimento
 - **Cálculo final**: 850 + 170 + 100 = 1120 GB
 - **Storage recomendado**: 1200 GB (arredondado para cima)
 
-**IMPORTANTE**: Nunca provisione storage muito próximo ao limite usado. Sempre mantenha pelo menos 15-20% de espaço livre.
+**IMPORTANTE**: Nunca provisione storage muito próximo ao limite usado. Sempre mantenha pelo menos 20% de espaço livre.
 
 ### 1.4 Verificar Tipo de Volume e IOPS
 
@@ -231,16 +231,16 @@ SELECT plugin_name, plugin_status FROM information_schema.plugins;
 2. Selecione a instância Blue (produção)
 3. Actions → Create Blue/Green Deployment
 
-**[INSERIR PRINT: Tela inicial do RDS Console com a instância selecionada]**
+<img src="images/rds-console-selecao.png" alt="Tela inicial do RDS Console com a instância selecionada" width="800">
 
 4. Configure:
-   - **Blue/Green deployment identifier**: `prod-storage-optimization`
+   - **Blue/Green deployment identifier**: `teste-storage-optimization`
    - **DB engine version**: (manter a mesma ou atualizar)
    - **Allocated storage**: `1200` (novo tamanho reduzido - cenário 4TB → 1TB)
    - **Storage type**: `gp3` (manter ou alterar)
    - **Provisioned IOPS**: (se aplicável)
 
-**[INSERIR PRINT: Formulário de criação do Blue/Green Deployment com campos preenchidos]**
+<img src="images/bluegreen-formulario.png" alt="Formulário de criação do Blue/Green Deployment com campos preenchidos" width="800">
 
 ### 2.2 Criar via AWS CLI
 
@@ -294,7 +294,8 @@ aws rds describe-blue-green-deployments \
 
 **Tempo estimado**: 15-45 minutos dependendo do tamanho do banco.
 
-**[INSERIR PRINT: Status do deployment como PROVISIONING ou AVAILABLE]**
+<img src="images/deployment-status-provisioning.png" alt="Status do deployment como PROVISIONING" width="800">
+<img src="images/deployment-status-available.png" alt="Status do deployment como AVAILABLE" width="800">
 
 ---
 
@@ -343,7 +344,7 @@ SHOW REPLICA STATUS\G
 - Nenhum erro de replicação
 - Validação de integridade concluída
 
-**[INSERIR PRINT: CloudWatch mostrando ReplicaLag próximo de zero]**
+<img src="images/cloudwatch-replication-lag.png" alt="CloudWatch mostrando ReplicaLag próximo de zero" width="800">
 
 ---
 
@@ -366,12 +367,12 @@ SHOW REPLICA STATUS\G
 2. Selecione o deployment
 3. Actions → Switch over
 
-**[INSERIR PRINT: Tela de Blue/Green Deployments com botão Switch over]**
+<img src="images/bluegreen-switchover-button.png" alt="Tela de Blue/Green Deployments com botão Switch over" width="800">
 
 4. Configure timeout: `300` segundos (recomendado)
 5. Confirme a operação
 
-**[INSERIR PRINT: Modal de confirmação do switchover com timeout configurado]**
+<img src="images/switchover-confirmacao.png" alt="Modal de confirmação do switchover com timeout configurado" width="800">
 
 **Via CLI:**
 ```bash
@@ -406,27 +407,6 @@ aws rds switchover-blue-green-deployment \
 - Aplicações devem ter **retry logic** implementado
 - Connection pooling reconecta automaticamente ao novo endpoint
 
-### 4.4 Monitorar o Switchover
-
-```bash
-# Terminal 1: Monitorar status
-watch -n 2 'aws rds describe-blue-green-deployments \
-  --blue-green-deployment-identifier <NOME_DO_DEPLOYMENT> \
-  --query "BlueGreenDeployments[0].Status"'
-
-# Terminal 2: Monitorar conexões
-watch -n 1 'aws cloudwatch get-metric-statistics \
-  --namespace AWS/RDS \
-  --metric-name DatabaseConnections \
-  --dimensions Name=DBInstanceIdentifier,Value=<NOME_DA_INSTANCIA_RDS> \
-  --start-time $(date -u -d "5 minutes ago" +%Y-%m-%dT%H:%M:%S) \
-  --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
-  --period 60 \
-  --statistics Average'
-```
-
-**[INSERIR PRINT: Dashboard mostrando métricas durante o switchover]**
-
 ---
 
 ## Etapa 5: Pós-Deployment e Limpeza
@@ -444,7 +424,7 @@ mysql -h <ENDPOINT_RDS> -u <USUARIO> -p -e "SELECT VERSION();"
 **Verificar storage:**
 ```bash
 aws rds describe-db-instances \
-  --db-instance-identifier <NOME_DA_INSTANCIA_RDS> \
+  --db-instance-identifier teste-blue-green-deployment \
   --query 'DBInstances[0].[AllocatedStorage,StorageType,Iops]'
 ```
 
@@ -454,7 +434,7 @@ aws rds describe-db-instances \
 - Read/Write Latency
 - IOPS
 
-**[INSERIR PRINT: Detalhes da instância mostrando novo storage alocado]**
+<img src="images/storage-alocado.png" alt="Detalhes da instância mostrando novo storage alocado" width="800">
 
 ### 5.2 Período de Observação
 
@@ -476,8 +456,7 @@ aws rds describe-db-instances \
 1. RDS Console → Blue/Green Deployments
 2. Selecione o deployment
 3. Actions → Delete
-4. Escolha: **Delete the blue database instances**
-5. Confirme
+4. Confirme
 
 **Via CLI:**
 ```bash
@@ -505,7 +484,7 @@ aws rds create-db-snapshot \
   --db-snapshot-identifier final-snapshot-before-deletion-$(date +%Y%m%d)
 ```
 
-**[INSERIR PRINT: Confirmação de deleção do Blue/Green Deployment]**
+<img src="images/delecao-confirmacao.png" alt="Confirmação de deleção do Blue/Green Deployment" width="800">
 
 ---
 
