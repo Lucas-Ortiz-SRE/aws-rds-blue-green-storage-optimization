@@ -349,12 +349,12 @@ SHOW REPLICA STATUS\G
 ### 4.1 Preparação para Switchover
 
 **Checklist pré-switchover:**
-- [ ] Notificar stakeholders sobre janela de manutenção
-- [ ] Backup manual recente disponível
-- [ ] Replication lag < 1 segundo
-- [ ] Plano de rollback documentado
-- [ ] Monitoramento ativo (CloudWatch, APM)
-- [ ] Equipe de plantão disponível
+- Notificar stakeholders sobre janela de manutenção
+- Backup manual recente disponível
+- Replication lag < 1 segundo
+- Plano de rollback documentado
+- Monitoramento ativo (CloudWatch, APM)
+- Equipe de plantão disponível
 
 ### 4.2 Executar Switchover
 
@@ -390,13 +390,13 @@ aws rds switchover-blue-green-deployment \
 
 **Sequência de eventos:**
 
-1. **T+0s**: Início do switchover
-2. **T+5s**: Blue entra em read-only mode
-3. **T+10s**: Replicação final (catch-up)
-4. **T+15s**: DNS swap (endpoint aponta para Green)
-5. **T+20s**: Green promovido para read-write
-6. **T+30s**: Conexões antigas são encerradas
-7. **T+60s**: Switchover completo
+1. Início do switchover
+2. Blue entra em read-only mode
+3. Replicação final (catch-up)
+4. DNS swap (endpoint aponta para Green)
+5. Green promovido para read-write
+6. Conexões antigas são encerradas
+7. Switchover completo
 
 **Comportamento das conexões:**
 - Conexões ativas no Blue são **terminadas** após o timeout
