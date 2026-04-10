@@ -518,8 +518,7 @@ aws rds create-db-snapshot \
 **Solução:**
 ```bash
 # 1. Reduzir carga de escrita temporariamente
-# 2. Verificar se Green tem mesma classe de instância
-# 3. Aguardar horário de menor carga
+# 2. Aguardar horário de menor carga
 ```
 
 ### Problema 2: Switchover Timeout
@@ -555,31 +554,6 @@ SELECT pg_terminate_backend(pid);
 # 2. Adicionar margem de 20%
 # 3. Recriar deployment com storage maior
 ```
-
-### Problema 4: Aplicação Não Reconecta
-
-**Sintoma**: Aplicação fica offline após switchover
-
-**Causa**: Falta de retry logic ou connection pooling inadequado
-
-**Solução:**
-```python
-# Exemplo: Implementar retry logic
-import time
-from psycopg2 import OperationalError
-
-def connect_with_retry(max_retries=5):
-    for attempt in range(max_retries):
-        try:
-            conn = psycopg2.connect(dsn)
-            return conn
-        except OperationalError:
-            if attempt < max_retries - 1:
-                time.sleep(2 ** attempt)
-            else:
-                raise
-```
-
 ### Lições Aprendidas
 
 **Boas Práticas:**
@@ -590,8 +564,7 @@ def connect_with_retry(max_retries=5):
 4. **Configure alertas do CloudWatch antes do switchover**
 5. **Documente o processo e tempos observados**
 6. **Implemente retry logic nas aplicações**
-7. **Use connection pooling (PgBouncer, ProxySQL)**
-8. **Monitore crescimento de storage pós-redução**
+7. **Monitore crescimento de storage pós-redução**
 
 **Evite:**
 
@@ -605,72 +578,34 @@ def connect_with_retry(max_retries=5):
 
 ## Calculadora de Otimização de Custos
 
-```python
-# Calcular economia de storage
-def calculate_savings(current_gb, target_gb, storage_type='gp3', region='us-east-1'):
-    pricing = {
-        'gp3': 0.08,
-        'gp2': 0.10,
-        'io1': 0.125,
-        'io2': 0.125
-    }
-    
-    price_per_gb = pricing.get(storage_type, 0.08)
-    reduction_gb = current_gb - target_gb
-    monthly_savings = reduction_gb * price_per_gb
-    annual_savings = monthly_savings * 12
-    
-    print(f"Storage Reduction: {reduction_gb} GB")
-    print(f"Monthly Savings: ${monthly_savings:.2f}")
-    print(f"Annual Savings: ${annual_savings:.2f}")
-    print(f"3-Year Savings: ${annual_savings * 3:.2f}")
+**Cenário de Exemplo: Redução de 4TB para 1TB**
 
-# Exemplo: Cenário de 4TB para 1TB
-calculate_savings(current_gb=4096, target_gb=1024, storage_type='gp3')
-```
+**Configuração para simulação:**
 
----
+**Antes (Ambiente Atual):**
+- Região: US East (N. Virginia)
+- Engine: MySQL
+- Instance Type: db.m6g.xlarge
+- Storage Type: General Purpose SSD (gp3)
+- Allocated Storage: 4096 GB (4TB)
+- IOPS: 3000
+- **Total Monthly Cost: $692.96**
 
-## Script de Automação
+**Depois (Ambiente Otimizado):**
+- Região: US East (N. Virginia)
+- Engine: MySQL
+- Instance Type: db.m6g.xlarge (mesmo)
+- Storage Type: General Purpose SSD (gp3)
+- Allocated Storage: 1024 GB (1TB)
+- IOPS: 3000
+- **Total Monthly Cost: $339.68**
 
-```bash
-#!/bin/bash
-# blue-green-storage-optimization.sh
-# Cenário: Reduzir RDS de 4TB para 1TB
+**Economia Estimada:**
+- **Economia mensal: $353.28**
+- **Economia anual: $4,239.36**
+- **Economia em 3 anos: $12,718.08**
 
-set -e
-
-# CONFIGURAÇÕES - AJUSTE CONFORME SEU AMBIENTE
-DB_INSTANCE="prod-database"                                    # Nome da instância RDS
-AWS_REGION="us-east-1"                                         # Região AWS
-AWS_ACCOUNT_ID="123456789012"                                  # ID da conta AWS
-TARGET_STORAGE=1200                                            # Novo tamanho em GB (1TB + margem)
-DEPLOYMENT_NAME="storage-optimization-$(date +%Y%m%d)"         # Nome do deployment
-
-echo "[1/5] Criando Blue/Green Deployment..."
-aws rds create-blue-green-deployment \
-  --blue-green-deployment-name "$DEPLOYMENT_NAME" \
-  --source-arn "arn:aws:rds:${AWS_REGION}:${AWS_ACCOUNT_ID}:db:${DB_INSTANCE}" \
-  --target-allocated-storage "$TARGET_STORAGE"
-
-echo "[2/5] Aguardando deployment ficar disponível..."
-aws rds wait blue-green-deployment-available \
-  --blue-green-deployment-identifier "$DEPLOYMENT_NAME"
-
-echo "[3/5] Verificando replication lag..."
-# Adicionar lógica de verificação de lag
-
-echo "[4/5] Pronto para switchover. Pressione ENTER para continuar..."
-read
-
-echo "[5/5] Executando switchover..."
-aws rds switchover-blue-green-deployment \
-  --blue-green-deployment-identifier "$DEPLOYMENT_NAME" \
-  --switchover-timeout 300
-
-echo "Switchover concluído com sucesso!"
-```
-
+**Link da Calculadora AWS:** https://calculator.aws/#/estimate?id=f6c63688740d4c1cdcf7bfb036d5b7654d22c7c4
 ---
 
 ## Referências
@@ -680,15 +615,3 @@ echo "Switchover concluído com sucesso!"
 - [RDS Storage Types](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html)
 - [RDS Pricing Calculator](https://calculator.aws)
 - [AWS Well-Architected Framework - Cost Optimization](https://docs.aws.amazon.com/wellarchitected/latest/cost-optimization-pillar/welcome.html)
-
----
-
-## Licença
-
-MIT License - Sinta-se livre para usar e adaptar para sua organização.
-
----
-
-**Autor**: FinOps Certified Practitioner  
-**Última atualização**: 2024  
-**Feedback**: Contribuições são bem-vindas via Pull Request
