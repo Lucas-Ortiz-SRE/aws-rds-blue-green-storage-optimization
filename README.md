@@ -12,6 +12,9 @@ Este projeto documenta a estratégia de redução de storage em bancos de dados 
 - Dump + Restore (com downtime prolongado)
 - Blue/Green Deployment (downtime de segundos a minutos)
 
+**Documentação Adicional**:
+- [Plano de Rollback](plano-rollback/ROLLBACK.md) - Procedimentos detalhados para reversão em caso de problemas
+
 ---
 
 ## Motivação e Impacto FinOps
@@ -352,7 +355,7 @@ SHOW REPLICA STATUS\G
 - Notificar stakeholders sobre janela de manutenção
 - Backup manual recente disponível
 - Replication lag < 1 segundo
-- Plano de rollback documentado
+- Plano de rollback documentado (consulte [Plano de Rollback](plano-rollback/ROLLBACK.md))
 - Monitoramento ativo (CloudWatch, APM)
 - Equipe de plantão disponível
 
@@ -457,6 +460,8 @@ aws rds describe-db-instances \
 
 **Recomendação**: Manter ambiente Blue por 24-48 horas antes de deletar.
 
+**Por que manter o Blue?** O ambiente Blue serve como caminho de rollback rápido caso problemas sejam identificados. Consulte o [Plano de Rollback](plano-rollback/ROLLBACK.md) para procedimentos detalhados de reversão.
+
 **Monitorar:**
 - Performance da aplicação
 - Erros de conexão
@@ -560,11 +565,12 @@ SELECT pg_terminate_backend(pid);
 
 1. **Sempre teste em ambiente não-produtivo primeiro**
 2. **Execute durante janela de baixa carga**
-3. **Mantenha Blue por 24-48h antes de deletar**
+3. **Mantenha Blue por 24-48h antes de deletar** (permite rollback rápido)
 4. **Configure alertas do CloudWatch antes do switchover**
 5. **Documente o processo e tempos observados**
 6. **Implemente retry logic nas aplicações**
 7. **Monitore crescimento de storage pós-redução**
+8. **Tenha o [Plano de Rollback](plano-rollback/ROLLBACK.md) acessível durante a operação**
 
 **Evite:**
 
