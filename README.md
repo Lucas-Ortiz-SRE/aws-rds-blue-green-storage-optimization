@@ -4,6 +4,26 @@ Estrutura de otimização de custos para AWS RDS: Redução de storage utilizand
 
 ---
 
+## Índice
+
+- [Visão Geral do Projeto](#visão-geral-do-projeto)
+- [Motivação e Impacto FinOps](#motivação-e-impacto-finops)
+- [Pré-requisitos](#pré-requisitos)
+  - [Configurações Obrigatórias](#configurações-obrigatórias)
+  - [Limitações e Restrições](#limitações-e-restrições)
+  - [Atenção Especial: Instâncias Burstable (Família T)](#atenção-especial-instâncias-burstable-família-t)
+- [Etapa 1: Avaliação de Recursos e Planejamento](#etapa-1-avaliação-de-recursos-e-planejamento)
+- [Etapa 2: Provisionamento do Ambiente Green](#etapa-2-provisionamento-do-ambiente-green)
+- [Etapa 3: Monitoramento da Sincronização de Dados](#etapa-3-monitoramento-da-sincronização-de-dados)
+- [Etapa 4: Fase de Switchover (Cutover)](#etapa-4-fase-de-switchover-cutover)
+- [Etapa 5: Pós-Deployment e Limpeza](#etapa-5-pós-deployment-e-limpeza)
+- [Resolução de Problemas e Lições Aprendidas](#resolução-de-problemas-e-lições-aprendidas)
+- [Calculadora de Otimização de Custos](#calculadora-de-otimização-de-custos)
+- [Script de Automação](#script-de-automação)
+- [Referências](#referências)
+
+---
+
 ## Visão Geral do Projeto
 
 Este projeto documenta a estratégia de redução de storage em bancos de dados Amazon RDS utilizando a funcionalidade Blue/Green Deployment. O objetivo é reduzir custos operacionais eliminando storage provisionado em excesso (por exemplo, reduzir de 4TB para 1TB) com downtime mínimo e zero perda de dados.
@@ -27,24 +47,6 @@ O Blue/Green Deployment foi escolhido por oferecer:
 - **Zero data loss**: Replicação síncrona garante integridade
 - **Rollback seguro**: Ambiente Blue permanece disponível após switchover
 - **Validação prévia**: Possibilidade de testar o ambiente Green antes da promoção
-
-### Impacto Financeiro
-
-**Exemplo de economia:**
-- Storage atual: 4TB (4096 GB) em gp3
-- Storage necessário: 1TB (1024 GB)
-- Redução: 3TB (3072 GB)
-
-**Cálculo mensal (us-east-1):**
-```
-Storage gp3: $0.08/GB-month
-Economia: 3072 GB × $0.08 = $245.76/mês
-Economia anual: $2,949.12/ano
-```
-
-**Custo da operação:**
-- Durante o Blue/Green: ~2-4 horas de storage duplicado (~$0.50-$1.00)
-- ROI: Recuperação do investimento em menos de 1 dia
 
 ---
 
@@ -224,6 +226,8 @@ SELECT plugin_name, plugin_status FROM information_schema.plugins;
 ---
 
 ## Etapa 2: Provisionamento do Ambiente Green
+
+**Nota Importante sobre os Prints**: Os prints de exemplo neste guia utilizam um ambiente de teste com redução de 30GB para 20GB apenas para fins didáticos e evitar custos desnecessários durante a documentação. O processo e os passos são exatamente os mesmos para reduções maiores, como o cenário real de 4TB → 1TB documentado neste guia.
 
 ### 2.1 Criar Blue/Green Deployment via Console
 
