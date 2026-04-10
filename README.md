@@ -611,7 +611,7 @@ SELECT pg_terminate_backend(pid);
 - **Economia anual: $4,239.36**
 - **Economia em 3 anos: $12,718.08**
 
-**Link da Calculadora AWS:** [Calculadora AWS]https://calculator.aws/#/estimate?id=f6c63688740d4c1cdcf7bfb036d5b7654d22c7c4
+**Acesse a [Calculadora AWS](https://calculator.aws/#/estimate?id=f6c63688740d4c1cdcf7bfb036d5b7654d22c7c4) para simular seu cenário**
 ---
 
 ## Referências
